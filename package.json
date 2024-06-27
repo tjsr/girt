@@ -1,0 +1,37 @@
+{
+  "name": "@tjsr/girt",
+  "version": "0.0.1",
+  "description": "Github Repository Tool",
+  "main": "index.js",
+  "bin": {
+    "girt": "./dist/esm/index.js"
+  },
+  "type": "module",
+  "scripts": {
+    "build": "tsc",
+    "test": "npm run test"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tjsr/girt.git"
+  },
+  "keywords": [
+    "Github"
+  ],
+  "author": "Tim Rowe <tim@tjsr.id.au>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/tjsr/girt/issues"
+  },
+  "homepage": "https://github.com/tjsr/girt#readme",
+  "dependencies": {
+    "@octokit/rest": "^21.0.0",
+    "commander": "^12.1.0",
+    "git-remote-origin-url": "^4.0.0",
+    "git-state": "^4.1.0"
+  },
+  "devDependencies": {
+    "@types/git-state": "^4.1.3",
+    "@types/node": "^20.14.9"
+  }
+}
