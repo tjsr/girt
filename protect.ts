@@ -119,7 +119,7 @@ export const protectCommand = ():commander.Command => {
           enforce_admins: true,
           required_pull_request_reviews: {
             dismiss_stale_reviews: true,
-            require_code_owner_reviews: true,
+            require_code_owner_reviews: false,
             required_approving_review_count: 0
           },
           restrictions: null
@@ -130,8 +130,8 @@ export const protectCommand = ():commander.Command => {
           repo: repoBranchInfo.repoName,
           branch: repoBranchInfo.branch,
           dismiss_stale_reviews: true,
-          require_code_owner_reviews: true,
-          required_approving_review_count: 1,
+          require_code_owner_reviews: false,
+          required_approving_review_count: 0,
           restrictions: null
         });
         console.log('Updated branch protection.');
