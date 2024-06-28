@@ -1,5 +1,5 @@
 {
-  "name": "@tjsr/girt",
+  "name": "girt",
   "version": "0.0.1",
   "description": "Github Repository Tool",
   "main": "./dist/esm/girt.js",
