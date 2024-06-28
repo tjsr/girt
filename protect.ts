@@ -99,17 +99,16 @@ export const protectCommand = ():commander.Command => {
       const token = options.token || process.env['GITHUB_TOKEN'];
       
       try {
-        validateRepoInfo(repoBranchInfo);
+        requireOption(token, 'token');
       } catch (err: any) {
-        command.addHelpText('after', err.message);
-        command.help();
+        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' + err.message, { exitCode: 2, code: 'GIRT.NO_TOKEN' });
         return;
       }
 
       try {
-        requireOption(token, 'token');
+        validateRepoInfo(repoBranchInfo);
       } catch (err: any) {
-        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' + err.message, { exitCode: 2, code: 'GIRT.NO_TOKEN' });
+        command.error(err.message);
         return;
       }
 
