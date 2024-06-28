@@ -59,3 +59,11 @@ npm link
 ```
 
 This enables you to simply call `girt` from anywhere that has your node_modules/bin on the path.
+
+## About
+
+Written by [Tim Rowe](mailto:tim@tjsr.id.au). Email me for questions or requests.
+
+### Source code
+
+Available at [https://github.com/tjsr/girt](https://github.com/tjsr/girt)
