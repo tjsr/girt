@@ -67,3 +67,7 @@ Written by [Tim Rowe](mailto:tim@tjsr.id.au). Email me for questions or requests
 ### Source code
 
 Available at [https://github.com/tjsr/girt](https://github.com/tjsr/girt)
+
+## Why 'girt'?
+
+Only an Aussie could use a word which is basically never used and only occurs in our national anthem. ;)
