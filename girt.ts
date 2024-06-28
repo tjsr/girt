@@ -1,7 +1,9 @@
 #! node
 
+import { loginCommand } from "./login.js";
 import { program } from "commander";
 import { protectCommand } from "./protect.js";
+import { tokenCommand } from "./token.js";
 
 program
   .version("0.0.1", '-v, --version', 'Output the current version')
@@ -21,5 +23,7 @@ program
   });
 
  program.addCommand(protectCommand());
+ program.addCommand(loginCommand());
+ program.addCommand(tokenCommand());
 
 await program.parseAsync(process.argv);
