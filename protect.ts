@@ -3,6 +3,7 @@ import * as commander from "commander";
 import { RepoBranchInfo, RepoInfo } from "./types.js";
 
 import { Octokit } from "@octokit/rest";
+import assert from 'assert';
 import { checkSync } from "git-state";
 import gitRemoteOriginUrl from 'git-remote-origin-url';
 
@@ -82,6 +83,74 @@ const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
   return `Protecting @${repoBranchInfo.repoOwner}/${repoBranchInfo.repoName}#${repoBranchInfo.branch}`;
 };
 
+const safeInt = (value: string|number|undefined): number|undefined => {
+  if (value === undefined) {
+    return undefined;
+  }
+  if (typeof value === 'number') {
+    return value as number;
+  }
+
+  return parseInt(value);
+}
+
+export const createReviewProtection = (
+  branch: string,
+  repoOwner: string,
+  repoName: string,
+  reviewers: number | undefined
+) => {
+  assert(branch !== undefined);
+  assert(repoOwner !== undefined);
+  assert(repoName !== undefined);
+
+  const pullRequestReviewProtection: any = {
+    owner: repoOwner,
+    repo: repoName,
+    branch: branch,
+    dismiss_stale_reviews: true,
+    require_code_owner_reviews: false,
+    restrictions: null
+  };
+  if (reviewers !== undefined) {
+    pullRequestReviewProtection.required_approving_review_count = reviewers;
+  }
+  return pullRequestReviewProtection;
+};
+
+export const createBranchProtectionSettingsPayload = (
+  branch: string,
+  repoOwner: string,
+  repoName: string,
+  reviewers: number|undefined,
+  enforceAdmins: boolean|undefined
+): any => {
+  assert(branch !== undefined);
+  assert(repoOwner !== undefined);
+  assert(repoName !== undefined);
+
+  const pullRequestReviews: any = {
+    dismiss_stale_reviews: true,
+    require_code_owner_reviews: false,
+  };
+  const branchProtectionSettings: any = {
+    owner: repoOwner,
+    repo: repoName,
+    branch: branch,
+    required_status_checks: null,
+    required_pull_request_reviews: pullRequestReviews,
+    restrictions: null
+  };
+
+  if (reviewers !== undefined) {
+    pullRequestReviews.required_approving_review_count = reviewers
+  }
+  if (enforceAdmins !== undefined) {
+    branchProtectionSettings.enforce_admins = enforceAdmins;
+  }
+  return branchProtectionSettings;
+};
+
 export const protectCommand = ():commander.Command => {
   const protect = new commander.Command("protect");
 
@@ -90,10 +159,11 @@ export const protectCommand = ():commander.Command => {
     .option("-r, --repo <string>", "Repository name to modify")
     .option("-p, --path <path>", "Location of repository if reading details from git repo on disk")
     .option("-b, --branch <branch>", "Repository branch to modify")
+    .option('-n --reviewers <number>', 'Number of reviewers required for PR approval')
+    .option('-e, --enforce-admins', 'Also enforce branch protection rules applying to admins')
     .option("-t, --token <token>", "GitHub token")
     .action(async (options, command: commander.Command) => {
       const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(options.owner, options.repo, options.branch, options.path);
-      
       const token = options.token || process.env['GITHUB_TOKEN'];
       
       try {
@@ -112,6 +182,15 @@ export const protectCommand = ():commander.Command => {
         return;
       }
 
+      let reviewers: number|undefined = undefined;
+      try {
+        reviewers = safeInt(options?.reviewers);
+      } catch (err) {
+        command.showHelpAfterError();
+        command.error('Reviewers must be a number');
+        return;
+      }
+
       const octo: Octokit = new Octokit({ auth: token });
       console.log(repoBranchString(repoBranchInfo));
       try {
@@ -119,29 +198,23 @@ export const protectCommand = ():commander.Command => {
           console.log('Skipping in test mode.');
           return;
         }
-        await octo.rest.repos.updateBranchProtection({
-          owner: repoBranchInfo.repoOwner,
-          repo: repoBranchInfo.repoName,
-          branch: repoBranchInfo.branch,
-          required_status_checks: null,
-          enforce_admins: true,
-          required_pull_request_reviews: {
-            dismiss_stale_reviews: true,
-            require_code_owner_reviews: false,
-            required_approving_review_count: 0
-          },
-          restrictions: null
-        });
 
-        await octo.rest.repos.updatePullRequestReviewProtection({
-          owner: repoBranchInfo.repoOwner,
-          repo: repoBranchInfo.repoName,
-          branch: repoBranchInfo.branch,
-          dismiss_stale_reviews: true,
-          require_code_owner_reviews: false,
-          required_approving_review_count: 0,
-          restrictions: null
-        });
+        const branchProtectionSettings = createBranchProtectionSettingsPayload(
+          repoBranchInfo.branch,
+          repoBranchInfo.repoOwner,
+          repoBranchInfo.repoName,
+          reviewers,
+          options?.enforceAdmins);
+        await octo.rest.repos.updateBranchProtection(branchProtectionSettings);
+
+        const pullRequestReviewProtection = createReviewProtection(
+          repoBranchInfo.branch,
+          repoBranchInfo.repoOwner,
+          repoBranchInfo.repoName,
+          reviewers
+        );
+        await octo.rest.repos.updatePullRequestReviewProtection(pullRequestReviewProtection);
+
         console.log('Updated branch protection.');
       } catch (err: any) {
         if (err.status === 401 && err.message) {
