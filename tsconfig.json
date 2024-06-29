@@ -7,6 +7,7 @@
     "moduleResolution": "NodeNext",                       /* Specify how TypeScript looks up a file from a given module specifier. */
     "resolveJsonModule": true /* Enable importing .json files. */,
     "lib": ["ES2022"],
+    "types": ["vitest/globals"],
     "rootDir": "./" /* Specify the root folder within your source files. */,
 
     /* Emit */
@@ -42,6 +43,6 @@
     // "skipDefaultLibCheck": true,                      /* Skip type checking .d.ts files that are included with TypeScript. */
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
-  "include": ["*.ts"],
-  "exclude": ["vitest.config.ts", "dist", "build"]
+  "include": ["vitest.config.ts", "*.ts"],
+  "exclude": ["dist", "build"]
 }
