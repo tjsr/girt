@@ -216,7 +216,6 @@ export const protectCommand = ():commander.Command => {
 
       const octo: Octokit = new Octokit({ auth: token });
       const repoString = repoBranchString(repoBranchInfo);
-      console.log(repoString);
       try {
         if (repoBranchInfo.repo === 'test') {
           console.log('Skipping in test mode.');
@@ -227,7 +226,7 @@ export const protectCommand = ():commander.Command => {
 
         try {
           currentSettings = await retrieveBranchProtectionSettings(octo, repoBranchInfo);
-          // console.log(currentSettings);
+          currentSettings = (currentSettings as any).data;
         } catch (err: any) {
           if (err.status === 404) {
             console.log(`Branch for repo ${repoString} is not currently protected.`);
@@ -236,6 +235,14 @@ export const protectCommand = ():commander.Command => {
             command.error(`Failed to retrieve branch protection settings: ${err.message}`);
             return;
           }
+        }
+
+        if (!options?.query) {
+          console.log(repoString);
+        } else if (options?.query) {
+          console.log('Current branch protection settings:');
+          console.log(currentSettings);
+          return;
         }
 
         const reviewersValue = parameterOrExistingOrDefault(
