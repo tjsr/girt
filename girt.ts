@@ -1,12 +1,17 @@
 #! node
 
+import { findPackageJson, getVersionFromPackageJson } from "@tjsr/package-json-utils";
+
 import { loginCommand } from "./login.js";
 import { program } from "commander";
 import { protectCommand } from "./protect.js";
 import { tokenCommand } from "./token.js";
 
+const packageJsonPath = findPackageJson(import.meta.dirname);
+const version = await getVersionFromPackageJson(packageJsonPath);
+
 program
-  .version("0.0.1", '-v, --version', 'Output the current version')
+  .version(version, '-v, --version', 'Output the current version')
   .description("Github Repository Tool")
   .usage("[gobal options] <command> [options]")
   .passThroughOptions()

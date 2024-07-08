@@ -1,23 +1,10 @@
 import { createBranchProtectionSettingsPayload, createReviewProtection } from "./protect.js";
 
-import { TestContext } from "vitest";
-
-type BranchProtectionContext = {
-  branch: string;
-  repoOwner: string;
-  repoName: string;
-  reviewers: number | undefined;
-  enforceAdmins: boolean | undefined;
-} & TestContext;
+import { BranchProtectionContext } from "./testTypes.js";
+import { basicContext } from "./testTypes.js";
 
 describe<BranchProtectionContext>('createReviewProtection', () => {
-  beforeEach((context: BranchProtectionContext) => {
-    context.branch = 'main';
-    context.repoOwner = 'owner';
-    context.repoName = 'repo';
-    context.reviewers = 3;
-    context.enforceAdmins = false;
-  });
+  beforeEach(basicContext);
 
   test('Should exclude reviewers node if value is undefined', (context: BranchProtectionContext) => {
     // Arrange
@@ -43,13 +30,7 @@ describe<BranchProtectionContext>('createReviewProtection', () => {
 });
 
 describe('createBranchProtectionSettingsPayload', () => {
-  beforeEach((context: BranchProtectionContext) => {
-    context.branch = 'main';
-    context.repoOwner = 'owner';
-    context.repoName = 'repo';
-    context.reviewers = 3;
-    context.enforceAdmins = false;
-  });
+  beforeEach(basicContext);
 
   test('Should exclude reviewers node if value is undefined', (context: BranchProtectionContext) => {
     // Arrange
@@ -88,3 +69,4 @@ describe('createBranchProtectionSettingsPayload', () => {
     expect(result).not.toHaveProperty('enforce_admins');
   });
 });
+

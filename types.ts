@@ -1,7 +1,7 @@
 export type RepoInfo = {
   hostname: string;
-  repoOwner: string;
-  repoName: string;
+  owner: string;
+  repo: string;
 };
 
 export type RepoBranchInfo = {

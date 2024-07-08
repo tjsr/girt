@@ -3,6 +3,7 @@ import * as commander from "commander";
 import { RepoBranchInfo, RepoInfo } from "./types.js";
 
 import { Octokit } from "@octokit/rest";
+import { RequestParameters } from "@octokit/types";
 import assert from 'assert';
 import { checkSync } from "git-state";
 import gitRemoteOriginUrl from 'git-remote-origin-url';
@@ -21,13 +22,13 @@ const getOptionOrLocalRepoInfo = async (
   if (!repoOwner || !repoName) {
     const repoInfo = await getRepoInfo(repoPathOnDisk);
     if (!repoOwner) {
-      repoOwner = repoInfo.repoOwner;
+      repoOwner = repoInfo.owner;
     }
     if (!repoName) {
-      repoName = repoInfo.repoName;
+      repoName = repoInfo.repo;
     }
   }
-  const info: RepoInfo = { hostname: 'github.com', repoOwner, repoName };
+  const info: RepoInfo = { hostname: 'github.com', owner: repoOwner, repo: repoName };
   return Promise.resolve(info);
 };
 
@@ -45,7 +46,7 @@ const getRepoInfoFromHttpsUrl = (url: string): RepoInfo => {
   const hostname = urlParts[3]!;
   const repoUser = urlParts[4]!;
   const repoName = urlParts[5]!.split('.')[0]!;
-  return { hostname, repoOwner: repoUser, repoName };
+  return { hostname, owner: repoUser, repo: repoName };
 };
 
 const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
@@ -56,7 +57,7 @@ const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
   const hostname = urlParts[1]!;
   const repoUser = urlParts[2]!;
   const repoName = urlParts[3]!.split('.')[0]!;
-  return { hostname, repoOwner: repoUser, repoName };
+  return { hostname, owner: repoUser, repo: repoName };
 };
 
 const getRepoBranchInfo = async (owner: string|undefined, repo: string|undefined, branch: string|undefined, path: string = '.'): Promise<RepoBranchInfo> => {
@@ -75,12 +76,12 @@ const getRepoBranchInfo = async (owner: string|undefined, repo: string|undefined
 
 const validateRepoInfo = (repoBranchInfo: RepoBranchInfo) => {
   requireOption(repoBranchInfo.branch, 'branch');
-  requireOption(repoBranchInfo.repoOwner, 'repo owner');
-  requireOption(repoBranchInfo.repoName, 'repo name');
+  requireOption(repoBranchInfo.owner, 'repo owner');
+  requireOption(repoBranchInfo.repo, 'repo name');
 };
 
 const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
-  return `Protecting @${repoBranchInfo.repoOwner}/${repoBranchInfo.repoName}#${repoBranchInfo.branch}`;
+  return `Protecting @${repoBranchInfo.owner}/${repoBranchInfo.repo}#${repoBranchInfo.branch}`;
 };
 
 const safeInt = (value: string|number|undefined): number|undefined => {
@@ -151,6 +152,14 @@ export const createBranchProtectionSettingsPayload = (
   return branchProtectionSettings;
 };
 
+export const retrieveBranchProtectionSettings = async (octo: Octokit, params?: (RequestParameters & {
+  owner: string;
+  repo: string;
+  branch: string;
+}) | undefined) => {
+  return octo.rest.repos.getBranchProtection(params);
+}
+
 export const protectCommand = ():commander.Command => {
   const protect = new commander.Command("protect");
 
@@ -194,23 +203,26 @@ export const protectCommand = ():commander.Command => {
       const octo: Octokit = new Octokit({ auth: token });
       console.log(repoBranchString(repoBranchInfo));
       try {
-        if (repoBranchInfo.repoName === 'test') {
+        if (repoBranchInfo.repo === 'test') {
           console.log('Skipping in test mode.');
           return;
         }
 
+        const currentSettings = await retrieveBranchProtectionSettings(octo, repoBranchInfo);
+        console.log(currentSettings);
+
         const branchProtectionSettings = createBranchProtectionSettingsPayload(
           repoBranchInfo.branch,
-          repoBranchInfo.repoOwner,
-          repoBranchInfo.repoName,
+          repoBranchInfo.owner,
+          repoBranchInfo.repo,
           reviewers,
           options?.enforceAdmins);
         await octo.rest.repos.updateBranchProtection(branchProtectionSettings);
 
         const pullRequestReviewProtection = createReviewProtection(
           repoBranchInfo.branch,
-          repoBranchInfo.repoOwner,
-          repoBranchInfo.repoName,
+          repoBranchInfo.owner,
+          repoBranchInfo.repo,
           reviewers
         );
         await octo.rest.repos.updatePullRequestReviewProtection(pullRequestReviewProtection);
