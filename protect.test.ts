@@ -57,7 +57,7 @@ describe('createBranchProtectionSettingsPayload', () => {
   });
 
 
-  test('Should exclude enforce admins node if value is undefined', (context: BranchProtectionContext) => {
+  test('Should set enforce admins node if value is undefined', (context: BranchProtectionContext) => {
     // Arrange
     const reviewers = undefined;
     const enforceAdmins = undefined;
@@ -66,7 +66,7 @@ describe('createBranchProtectionSettingsPayload', () => {
     const result = createBranchProtectionSettingsPayload(context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
 
     // Assert
-    expect(result).not.toHaveProperty('enforce_admins');
+    expect(result).toHaveProperty('enforce_admins');
   });
 });
 

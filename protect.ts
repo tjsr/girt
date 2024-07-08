@@ -129,7 +129,9 @@ export const createBranchProtectionSettingsPayload = (
   assert(branch !== undefined);
   assert(repoOwner !== undefined);
   assert(repoName !== undefined);
-  assert(enforceAdmins !== undefined);
+  if (enforceAdmins === undefined) {
+    enforceAdmins = true;
+  }
 
   const pullRequestReviews: any = {
     dismiss_stale_reviews: true,
