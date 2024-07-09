@@ -8,9 +8,15 @@
   },
   "type": "module",
   "scripts": {
+    "test": "vitest --run && npm run lint",
     "build": "tsc",
-    "clean": "rimraf dist",
-    "test": "vitest --run"
+    "build:dist": "tsc -p tsconfig.publish.json",
+    "clean": "npx rimraf dist build",
+    "clean:all": "npx rimraf dist build node_modules",
+    "lint": "eslint --config eslint.config.mjs src/*.ts",
+    "lint:fix": "eslint --fix src/*.ts",
+    "prepack": "npm test && npm run build:dist",
+    "prepublishOnly": "npm run clean"
   },
   "repository": {
     "type": "git",
