@@ -44,5 +44,5 @@
     "skipLibCheck": true /* Skip type checking all .d.ts files. */
   },
   "include": ["vitest.config.ts", "*.ts"],
-  "exclude": ["dist", "build"]
+  "exclude": ["dist", "build", "node_modules"]
 }
