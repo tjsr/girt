@@ -22,15 +22,16 @@ describe('retrieveBranchProtectionSettings', () => {
   beforeEach((context: OctokitBranchProtectionContext) => {
     octoContext(context);
     context.octokit = new Octokit({
-      auth: context.githubToken
+      auth: context.githubToken,
     });
   });
 
-  test.runIf(hasGithubToken)('Should return the branch protection settings for the specified branch', async (context: OctokitBranchProtectionContext) => {
-    await expect(retrieveBranchProtectionSettings(context.octokit, {
-      owner: context.repoOwner,
-      repo: context.repoName,
-      branch: context.branch
-    })).resolves.toHaveProperty('data');
-  });
+  test.runIf(hasGithubToken)('Should return the branch protection settings for the specified branch',
+    async (context: OctokitBranchProtectionContext) => {
+      await expect(retrieveBranchProtectionSettings(context.octokit, {
+        branch: context.branch,
+        owner: context.repoOwner,
+        repo: context.repoName,
+      })).resolves.toHaveProperty('data');
+    });
 });

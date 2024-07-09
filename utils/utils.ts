@@ -7,7 +7,7 @@ export const safeInt = (value: string|number|undefined): number|undefined => {
   }
 
   return parseInt(value);
-}
+};
 
 export const parameterOrExistingOrDefault = <DataType>(
   param: DataType|undefined, existing: DataType|undefined, defaultValue: DataType|undefined

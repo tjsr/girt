@@ -21,12 +21,12 @@ export const createReviewProtection = (
   assert(repoName !== undefined);
 
   const pullRequestReviewProtection: any = {
-    owner: repoOwner,
-    repo: repoName,
     branch: branch,
     dismiss_stale_reviews: true,
+    owner: repoOwner,
+    repo: repoName,
     require_code_owner_reviews: false,
-    restrictions: null
+    restrictions: null,
   };
   if (reviewers !== undefined) {
     pullRequestReviewProtection.required_approving_review_count = reviewers;
@@ -53,17 +53,17 @@ export const createBranchProtectionSettingsPayload = (
     require_code_owner_reviews: false,
   };
   if (reviewers !== undefined) {
-    pullRequestReviews.required_approving_review_count = reviewers
+    pullRequestReviews.required_approving_review_count = reviewers;
   }
 
   const branchProtectionSettings: any = {
+    branch: branch,
     enforce_admins: enforceAdmins,
     owner: repoOwner,
     repo: repoName,
-    branch: branch,
-    required_status_checks: null,
     required_pull_request_reviews: pullRequestReviews,
-    restrictions: null
+    required_status_checks: null,
+    restrictions: null,
   };
 
   return branchProtectionSettings;
@@ -86,18 +86,22 @@ export const protectCommand = ():commander.Command => {
     .option("-p, --path <path>", "Location of repository if reading details from git repo on disk")
     .option("-b, --branch <branch>", "Repository branch to modify")
     .option('-n --reviewers <number>', 'Number of reviewers required for PR approval')
-    .option('-e, --enforce-admins', 'Also enforce branch protection rules applying to admins (default: true for new configs)')
+    .option('-e, --enforce-admins',
+      'Also enforce branch protection rules applying to admins (default: true for new configs)')
     .option("-t, --token <token>", "GitHub token")
     .option('-q, --query', 'Query the current branch protection settings')
     .action(async (options, command: commander.Command) => {
-      const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(options.owner, options.repo, options.branch, options.path);
+      const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(
+        options.owner, options.repo, options.branch, options.path
+      );
       const token = options.token || process.env['GITHUB_TOKEN'];
       
       try {
         requireOption(token, 'token');
       } catch (err: any) {
         command.showHelpAfterError();
-        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' + err.message, { exitCode: 2, code: 'GIRT.NO_TOKEN' });
+        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' +
+          err.message, { code: 'GIRT.NO_TOKEN', exitCode: 2 });
         return;
       }
 
@@ -126,7 +130,8 @@ export const protectCommand = ():commander.Command => {
           return;
         }
 
-        let currentSettings:GetResponseDataTypeFromEndpointMethod<typeof octo.rest.repos.getBranchProtection>|undefined = undefined;
+        let currentSettings:GetResponseDataTypeFromEndpointMethod<
+          typeof octo.rest.repos.getBranchProtection>|undefined = undefined;
 
         try {
           currentSettings = await retrieveBranchProtectionSettings(octo, repoBranchInfo);
@@ -151,7 +156,9 @@ export const protectCommand = ():commander.Command => {
 
         const reviewersValue = parameterOrExistingOrDefault(
           reviewers,
-          currentSettings?.enabled ? currentSettings?.required_pull_request_reviews?.required_approving_review_count : undefined,
+          currentSettings?.enabled
+            ? currentSettings?.required_pull_request_reviews?.required_approving_review_count
+            : undefined,
           0
         );
         const enforceAdmins = parameterOrExistingOrDefault(

@@ -17,8 +17,8 @@ export const getRepoBranchInfo = async (
   }
   const repoBranchInfo: RepoBranchInfo = {
     ...repoInfo,
-    branch: branch!
-  }
+    branch: branch!,
+  };
   return Promise.resolve(repoBranchInfo);
 };
 

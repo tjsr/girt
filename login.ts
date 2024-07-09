@@ -16,11 +16,13 @@ export const loginCommand = ():commander.Command => {
           token = await getAuthTokenAsString();
           if (token) {
             command.error('Token already set. Skipping login.  Use \'-s\' switch to skip token check.',
-              { exitCode: 5, code: 'girt.login.token_already_set' })
+              { code: 'girt.login.token_already_set', exitCode: 5 });
             return;
           }
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (err: any) {
-          command.error('Failed executing `gh auth token` command. ' + err.message, { exitCode: 3, code: 'girt.login.token_cmd_failed' });
+          command.error('Failed executing `gh auth token` command. ' +
+            err.message, { code: 'girt.login.token_cmd_failed', exitCode: 3 });
         }
       }
 
@@ -32,8 +34,10 @@ export const loginCommand = ():commander.Command => {
           console.log(token);
           return;
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        command.error('Failed executing `gh auth token` command. ' + err.message, { exitCode: 3, code: 'girt.login.token_cmd_failed' });
+        command.error('Failed executing `gh auth token` command. ' +
+          err.message, { code: 'girt.login.token_cmd_failed', exitCode: 3 });
       }
     });
   return login;
