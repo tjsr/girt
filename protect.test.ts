@@ -38,7 +38,8 @@ describe('createBranchProtectionSettingsPayload', () => {
     const enforceAdmins = false;
 
     // Act
-    const result = createBranchProtectionSettingsPayload(context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+    const result = createBranchProtectionSettingsPayload(
+      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
 
     // Assert
     expect(result.required_pull_request_reviews).not.toHaveProperty('required_approving_review_count');
@@ -50,7 +51,8 @@ describe('createBranchProtectionSettingsPayload', () => {
     const enforceAdmins = false;
 
     // Act
-    const result = createBranchProtectionSettingsPayload(context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+    const result = createBranchProtectionSettingsPayload(
+      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
 
     // Assert
     expect(result.required_pull_request_reviews.required_approving_review_count).toEqual(2);
@@ -63,7 +65,8 @@ describe('createBranchProtectionSettingsPayload', () => {
     const enforceAdmins = false;
 
     // Act
-    const result = createBranchProtectionSettingsPayload(context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+    const result = createBranchProtectionSettingsPayload(
+      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
 
     // Assert
     expect(result).toHaveProperty('enforce_admins', false);
@@ -75,7 +78,8 @@ describe('createBranchProtectionSettingsPayload', () => {
     const enforceAdmins = undefined;
 
     // Act
-    const result = createBranchProtectionSettingsPayload(context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+    const result = createBranchProtectionSettingsPayload(
+      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
 
     // Assert
     expect(result).toHaveProperty('enforce_admins', true);

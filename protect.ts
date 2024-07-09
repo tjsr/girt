@@ -1,99 +1,14 @@
 import * as commander from "commander";
 
 import { GetResponseDataTypeFromEndpointMethod, RequestParameters } from "@octokit/types";
-import { RepoBranchInfo, RepoInfo } from "./types.js";
+import { parameterOrExistingOrDefault, safeInt } from './utils/utils.js';
+import { requireOption, validateRepoInfo } from './utils/options.js';
 
 import { Octokit } from "@octokit/rest";
+import { RepoBranchInfo } from "./types.js";
 import assert from 'assert';
-import { checkSync } from "git-state";
-import gitRemoteOriginUrl from 'git-remote-origin-url';
-
-const requireOption = (option: string, optionName: string) => {
-  if (!option) {
-    throw new Error(`No ${optionName} provided`);
-  }
-};
-
-const getOptionOrLocalRepoInfo = async (
-  repoOwner: string|undefined,
-  repoName: string|undefined,
-  repoPathOnDisk: string = '.'
-): Promise<RepoInfo> => {
-  if (!repoOwner || !repoName) {
-    const repoInfo = await getRepoInfo(repoPathOnDisk);
-    if (!repoOwner) {
-      repoOwner = repoInfo.owner;
-    }
-    if (!repoName) {
-      repoName = repoInfo.repo;
-    }
-  }
-  const info: RepoInfo = { hostname: 'github.com', owner: repoOwner, repo: repoName };
-  return Promise.resolve(info);
-};
-
-const getRepoInfo = async (path?: string): Promise<RepoInfo> => {
-  const url = await gitRemoteOriginUrl({ cwd: path });
-  return url?.startsWith('https://') ? getRepoInfoFromHttpsUrl(url) : getRepoInfoFromGitUrl(url);
-};
-
-const getRepoInfoFromHttpsUrl = (url: string): RepoInfo => {
-  const urlParts = url.split(/[:/]/);
-  if (urlParts.length != 6) {
-    console.warn(urlParts);
-    throw new Error(`Invalid https repository URL format ${url}. Expected: git@hostname:/user/repo.git`);
-  }
-  const hostname = urlParts[3]!;
-  const repoUser = urlParts[4]!;
-  const repoName = urlParts[5]!.split('.')[0]!;
-  return { hostname, owner: repoUser, repo: repoName };
-};
-
-const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
-  const urlParts = url.split(/[@:/]/);
-  if (urlParts.length != 4) {
-    throw new Error(`Invalid URL format ${url}. Expected: git@hostname:/user/repo.git`);
-  }
-  const hostname = urlParts[1]!;
-  const repoUser = urlParts[2]!;
-  const repoName = urlParts[3]!.split('.')[0]!;
-  return { hostname, owner: repoUser, repo: repoName };
-};
-
-const getRepoBranchInfo = async (owner: string|undefined, repo: string|undefined, branch: string|undefined, path: string = '.'): Promise<RepoBranchInfo> => {
-  const repoInfo: RepoInfo = await getOptionOrLocalRepoInfo(owner, repo, path);
-
-  if (!branch) {
-    const currentDirState = checkSync(path);
-    branch = currentDirState.branch!;
-  }
-  const repoBranchInfo: RepoBranchInfo = {
-    ...repoInfo,
-    branch: branch!
-  }
-  return Promise.resolve(repoBranchInfo);
-};
-
-const validateRepoInfo = (repoBranchInfo: RepoBranchInfo) => {
-  requireOption(repoBranchInfo.branch, 'branch');
-  requireOption(repoBranchInfo.owner, 'repo owner');
-  requireOption(repoBranchInfo.repo, 'repo name');
-};
-
-const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
-  return `Protecting @${repoBranchInfo.owner}/${repoBranchInfo.repo}#${repoBranchInfo.branch}`;
-};
-
-const safeInt = (value: string|number|undefined): number|undefined => {
-  if (value === undefined) {
-    return undefined;
-  }
-  if (typeof value === 'number') {
-    return value as number;
-  }
-
-  return parseInt(value);
-}
+import { getRepoBranchInfo } from './utils/branchParams.js';
+import { repoBranchString } from './utils/repoUtils.js';
 
 export const createReviewProtection = (
   branch: string,
@@ -106,12 +21,12 @@ export const createReviewProtection = (
   assert(repoName !== undefined);
 
   const pullRequestReviewProtection: any = {
-    owner: repoOwner,
-    repo: repoName,
     branch: branch,
     dismiss_stale_reviews: true,
+    owner: repoOwner,
+    repo: repoName,
     require_code_owner_reviews: false,
-    restrictions: null
+    restrictions: null,
   };
   if (reviewers !== undefined) {
     pullRequestReviewProtection.required_approving_review_count = reviewers;
@@ -138,17 +53,17 @@ export const createBranchProtectionSettingsPayload = (
     require_code_owner_reviews: false,
   };
   if (reviewers !== undefined) {
-    pullRequestReviews.required_approving_review_count = reviewers
+    pullRequestReviews.required_approving_review_count = reviewers;
   }
 
   const branchProtectionSettings: any = {
+    branch: branch,
     enforce_admins: enforceAdmins,
     owner: repoOwner,
     repo: repoName,
-    branch: branch,
-    required_status_checks: null,
     required_pull_request_reviews: pullRequestReviews,
-    restrictions: null
+    required_status_checks: null,
+    restrictions: null,
   };
 
   return branchProtectionSettings;
@@ -162,19 +77,6 @@ export const retrieveBranchProtectionSettings = async (octo: Octokit, params?: (
   return octo.rest.repos.getBranchProtection(params);
 };
 
-const parameterOrExistingOrDefault = <DataType>(
-  param: DataType|undefined, existing: DataType|undefined, defaultValue: DataType|undefined
-): DataType|undefined => {
-  if (param !== undefined) {
-    return param;
-  }
-  if (existing !== undefined) {
-    return existing;
-  }
-  return defaultValue;
-};
-
-
 export const protectCommand = ():commander.Command => {
   const protect = new commander.Command("protect");
 
@@ -184,18 +86,22 @@ export const protectCommand = ():commander.Command => {
     .option("-p, --path <path>", "Location of repository if reading details from git repo on disk")
     .option("-b, --branch <branch>", "Repository branch to modify")
     .option('-n --reviewers <number>', 'Number of reviewers required for PR approval')
-    .option('-e, --enforce-admins', 'Also enforce branch protection rules applying to admins (default: true for new configs)')
+    .option('-e, --enforce-admins',
+      'Also enforce branch protection rules applying to admins (default: true for new configs)')
     .option("-t, --token <token>", "GitHub token")
     .option('-q, --query', 'Query the current branch protection settings')
     .action(async (options, command: commander.Command) => {
-      const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(options.owner, options.repo, options.branch, options.path);
+      const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(
+        options.owner, options.repo, options.branch, options.path
+      );
       const token = options.token || process.env['GITHUB_TOKEN'];
       
       try {
         requireOption(token, 'token');
       } catch (err: any) {
         command.showHelpAfterError();
-        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' + err.message, { exitCode: 2, code: 'GIRT.NO_TOKEN' });
+        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' +
+          err.message, { code: 'GIRT.NO_TOKEN', exitCode: 2 });
         return;
       }
 
@@ -224,7 +130,8 @@ export const protectCommand = ():commander.Command => {
           return;
         }
 
-        let currentSettings:GetResponseDataTypeFromEndpointMethod<typeof octo.rest.repos.getBranchProtection>|undefined = undefined;
+        let currentSettings:GetResponseDataTypeFromEndpointMethod<
+          typeof octo.rest.repos.getBranchProtection>|undefined = undefined;
 
         try {
           currentSettings = await retrieveBranchProtectionSettings(octo, repoBranchInfo);
@@ -249,7 +156,9 @@ export const protectCommand = ():commander.Command => {
 
         const reviewersValue = parameterOrExistingOrDefault(
           reviewers,
-          currentSettings?.enabled ? currentSettings?.required_pull_request_reviews?.required_approving_review_count : undefined,
+          currentSettings?.enabled
+            ? currentSettings?.required_pull_request_reviews?.required_approving_review_count
+            : undefined,
           0
         );
         const enforceAdmins = parameterOrExistingOrDefault(

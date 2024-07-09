@@ -22,13 +22,15 @@ program
   .option("-t, --token <token>", "GitHub token")
   .action(async (_option, command) => {
     console.log(program.description());
-    const commandList = program.commands.filter((command) => command.name() !== 'girt').map((command) => ` ${command.name()}: ${command.description()}`).join('\n');
+    const commandList = program.commands.filter(
+      (command) => command.name() !== 'girt')
+      .map((command) => ` ${command.name()}: ${command.description()}`).join('\n');
     console.log(commandList);
     command.outputHelp();
   });
 
- program.addCommand(protectCommand());
- program.addCommand(loginCommand());
- program.addCommand(tokenCommand());
+program.addCommand(protectCommand());
+program.addCommand(loginCommand());
+program.addCommand(tokenCommand());
 
 await program.parseAsync(process.argv);

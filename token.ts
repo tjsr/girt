@@ -13,10 +13,13 @@ export const tokenCommand = ():commander.Command => {
           console.log(token);
           return;
         } else {
-          command.error('No token return from `gh auth token` command.', { exitCode: 4, code: 'girt.login.no_token' })
+          command.error('No token return from `gh auth token` command.',
+            { code: 'girt.login.no_token', exitCode: 4 });
         }
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        command.error('Failed executing `gh auth token` command. ' + err.message, { exitCode: 3, code: 'girt.login.token_cmd_failed' });
+        command.error('Failed executing `gh auth token` command. ' +
+          err.message, { code: 'girt.login.token_cmd_failed', exitCode: 3 });
       }
     });
   return token;
