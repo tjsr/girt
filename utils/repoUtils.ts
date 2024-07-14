@@ -30,6 +30,10 @@ const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
   return { hostname, owner: repoUser, repo: repoName };
 };
 
+export const repoString = (repoInfo: RepoInfo): string => {
+  return `@${repoInfo.owner}/${repoInfo.repo}`;
+};
+
 export const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
-  return `Protecting @${repoBranchInfo.owner}/${repoBranchInfo.repo}#${repoBranchInfo.branch}`;
+  return `Protecting ${repoString(repoBranchInfo)}#${repoBranchInfo.branch}`;
 };
