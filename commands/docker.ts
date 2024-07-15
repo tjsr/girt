@@ -89,8 +89,9 @@ export const dockerCommand = ():commander.Command => {
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
 
       if (!options.json) {
+        const undefStr = options.noUntagged ?? ' with at least 1 tag';
         console.log(
-          `Listing all container images for ${repoString(repoInfo)}${options.noUntagged && ' with at least 1 tag'}`
+          `Listing all container images for ${repoString(repoInfo)}${undefStr}'}`
         );
       }
 
