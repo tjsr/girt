@@ -2,12 +2,12 @@ import * as commander from "commander";
 
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "../types.js";
+import { repoString, repoStringFromParts } from "../utils/repoUtils.js";
 
 import { fileURLToPath } from "node:url";
 import { getOctokit } from "../utils/octokit.js";
 import { getTokenRequired } from '../utils/getTokenRequired.js';
 import path from "node:path";
-import { repoString } from "../utils/repoUtils.js";
 import { requireRepoInfo } from "../utils/repoBranchCommands.js";
 
 export type DockerCommandOptions = {
@@ -76,6 +76,25 @@ const parseCommonRepoOptions = async (
   };
 };
 
+const containerImageOrErrorOut = async (
+  octo: Octokit, command: commander.Command, owner: string, repo: string
+): Promise<ContainerImage[]|never> => {
+  try {
+    const images: ContainerImage[] = await getContainerImageVersions(octo, owner, repo);
+    return images;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    if (err.status === 404) {
+      command.error(`packages are not available for repository ${repoStringFromParts(owner, repo)}`);
+    } else if (err.status === 403) {
+      command.error(`Permission denied while reading package ${repoStringFromParts(owner, repo)}`);
+    } else {
+      command.error(`Unknown error while retrieving container image versions ` +
+        `for ${repoStringFromParts(owner, repo)}: ${err.message}`);
+    }
+  }
+};
+
 export const dockerCommand = ():commander.Command => {
   const docker = new commander.Command("docker");
 
@@ -95,20 +114,10 @@ export const dockerCommand = ():commander.Command => {
         );
       }
 
-      let images!: ContainerImage[];
-      try {
-        images = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      } catch (err: any) {
-        if (err.status === 404) {
-          command.error(`packages are not available for repository ${repoString(repoInfo)}`);
-        } else if (err.status === 403) {
-          command.error(`Permission denied while reading package ${repoString(repoInfo)}`);
-        } else {
-          command.error(`Unknown error while retrieving container image versions ` +
-            `for ${repoString(repoInfo)}: ${err.message}`);
-        }
-      }
+      let images: ContainerImage[] = await containerImageOrErrorOut(
+        octo, command, repoInfo.owner, repoInfo.repo
+      );
+
       if (options.noUntagged) {
         images = images.filter((image) => image.tags?.length >= 1);
       }
@@ -120,7 +129,8 @@ export const dockerCommand = ():commander.Command => {
           return;
         }
         images.forEach((image) => {
-          console.log(`${image.container} - ${image.tags.join(', ')}`);
+          const tagString = image.tags?.length >= 1 ? ` - (${image.tags.join(', ')})` : undefined;
+          console.log(`${image.container}${tagString ?? ''}`);
         });
       }
     });
@@ -136,7 +146,9 @@ export const dockerCommand = ():commander.Command => {
       if (!options.json) {
         console.log(`Listing all orphaned images for ${repoString(repoInfo)}`);
       }
-      const images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
+      const images: ContainerImage[] = await containerImageOrErrorOut(
+        octo, command, repoInfo.owner, repoInfo.repo
+      );
       const orphans: ContainerImage[] = images.filter((image) => !(image.tags?.length >= 1));
       if (options.json) {
         console.log(orphans);

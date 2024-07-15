@@ -32,8 +32,12 @@ const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
   return { hostname, owner: repoUser, repo: repoName };
 };
 
+export const repoStringFromParts = (owner: string, repo: string): string => {
+  return `@${owner}/${repo}`;
+};
+
 export const repoString = (repoInfo: Optional<RepoInfo, 'hostname'>): string => {
-  return `@${repoInfo.owner}/${repoInfo.repo}`;
+  return repoStringFromParts(repoInfo.owner, repoInfo.repo);
 };
 
 export const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
