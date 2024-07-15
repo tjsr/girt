@@ -36,10 +36,10 @@ export const repoStringFromParts = (owner: string, repo: string): string => {
   return `@${owner}/${repo}`;
 };
 
-export const repoString = (repoInfo: Optional<RepoInfo, 'hostname'>): string => {
+export const repoStringFromInfo = (repoInfo: Optional<RepoInfo, 'hostname'>): string => {
   return repoStringFromParts(repoInfo.owner, repoInfo.repo);
 };
 
 export const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
-  return `Protecting ${repoString(repoBranchInfo)}#${repoBranchInfo.branch}`;
+  return `Protecting ${repoStringFromInfo(repoBranchInfo)}#${repoBranchInfo.branch}`;
 };

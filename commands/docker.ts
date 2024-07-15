@@ -2,7 +2,7 @@ import * as commander from "commander";
 
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "../types.js";
-import { repoString, repoStringFromParts } from "../utils/repoUtils.js";
+import { repoStringFromInfo, repoStringFromParts } from "../utils/repoUtils.js";
 
 import { fileURLToPath } from "node:url";
 import { getOctokit } from "../utils/octokit.js";
@@ -95,8 +95,39 @@ const containerImageOrErrorOut = async (
   }
 };
 
+const imageIntentMessage = (
+  noUntaggedImages: boolean | undefined,
+  repoString: string
+): string => {
+  let listMessage = `Listing all container images for ${repoString}`;
+  if (noUntaggedImages) {
+    listMessage += ' with at least 1 tag';
+  }
+  return listMessage;
+};
+
+const outputResults = (
+  repoString: string,
+  images: ContainerImage[],
+  outputFunction: (_image: ContainerImage) => string,
+  criteria: 'images'|'orphaned images' = 'images'
+): void => {
+  if (images.length === 0) {
+    console.log(`No ${criteria} found in ${repoString}`);
+    return;
+  }
+
+  images.forEach((image) => console.log(outputFunction(image)));
+  return;
+};
+
 export const dockerCommand = ():commander.Command => {
   const docker = new commander.Command("docker");
+
+  const imageDetailLine = (image: ContainerImage): string => {
+    const tagString = image.tags?.length >= 1 ? ` - (${image.tags.join(', ')})` : undefined;
+    return `${image.container}${tagString ?? ''}`;
+  };
 
   const images = new commander.Command("images")
     .description("List all images in the given github package repository")
@@ -106,12 +137,10 @@ export const dockerCommand = ():commander.Command => {
     .action(async (_localOptions: DockerImageComandOptions, command: commander.Command) => {
       const options: DockerImageComandOptions = command.optsWithGlobals();
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
+      const repoString = repoStringFromInfo(repoInfo);
 
       if (!options.json) {
-        const undefStr = options.noUntagged ?? ' with at least 1 tag';
-        console.log(
-          `Listing all container images for ${repoString(repoInfo)}${undefStr}'}`
-        );
+        console.log(imageIntentMessage(options.noUntagged, repoString));
       }
 
       let images: ContainerImage[] = await containerImageOrErrorOut(
@@ -124,14 +153,7 @@ export const dockerCommand = ():commander.Command => {
       if (options.json) {
         console.log(images);
       } else {
-        if (images.length === 0) {
-          console.log(`No images found in ${repoString(repoInfo)}`);
-          return;
-        }
-        images.forEach((image) => {
-          const tagString = image.tags?.length >= 1 ? ` - (${image.tags.join(', ')})` : undefined;
-          console.log(`${image.container}${tagString ?? ''}`);
-        });
+        outputResults(repoString, images, imageDetailLine);
       }
     });
 
@@ -142,9 +164,10 @@ export const dockerCommand = ():commander.Command => {
     .action(async (_localOptions: DockerImageComandOptions, command: commander.Command) => {
       const options: DockerImageComandOptions = command.optsWithGlobals();
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
+      const repoString = repoStringFromInfo(repoInfo);
 
       if (!options.json) {
-        console.log(`Listing all orphaned images for ${repoString(repoInfo)}`);
+        console.log(`Listing all orphaned images for ${repoString}`);
       }
       const images: ContainerImage[] = await containerImageOrErrorOut(
         octo, command, repoInfo.owner, repoInfo.repo
@@ -153,13 +176,7 @@ export const dockerCommand = ():commander.Command => {
       if (options.json) {
         console.log(orphans);
       } else {
-        if (orphans.length === 0) {
-          console.log(`No orphaned images found in ${repoString(repoInfo)}`);
-          return;
-        }
-        orphans.forEach((image) => {
-          console.log(image.container);
-        });
+        outputResults(repoString, orphans, (image) => image.container, 'orphaned images');
       }
     });
     
