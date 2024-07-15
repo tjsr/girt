@@ -30,6 +30,7 @@ interface ContainerImage {
   updated: string;
 }
 
+// @ts-expect-error ts6133
 const _getContainerImagesForUser = async (
   octo: Octokit, owner: string
 ): Promise<RestEndpointMethodTypes["packages"]["listPackagesForUser"]["response"]["data"]> => {
