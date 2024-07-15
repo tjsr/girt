@@ -1,4 +1,4 @@
-import { branchNameToVersion } from "./branchNameToVersion";
+import { branchNameToVersion } from "./branchNameToVersion.js";
 
 describe('branchNameToVersion', () => {
   test('Should replace disallowed characters except space with a dash', () => {
@@ -7,8 +7,6 @@ describe('branchNameToVersion', () => {
     expect(branchNameToVersion('fix/another_bug')).toBe('fix-another_bug');
     expect(branchNameToVersion('something.else/version1.23')).toBe('something.else-version1.23');
   });
-
-  test('Should replace ')
 
   test('Should accept branch names containing numbers', () => {
     expect(branchNameToVersion('dev/task123')).toBe('dev-task123');

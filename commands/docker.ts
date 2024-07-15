@@ -30,7 +30,9 @@ interface ContainerImage {
   updated: string;
 }
 
-const getContainerImagesForUser = async (octo: Octokit, owner: string): Promise<RestEndpointMethodTypes["packages"]["listPackagesForUser"]["response"]["data"]> => {
+const _getContainerImagesForUser = async (
+  octo: Octokit, owner: string
+): Promise<RestEndpointMethodTypes["packages"]["listPackagesForUser"]["response"]["data"]> => {
   return octo.rest.packages.listPackagesForUser({
     package_type: 'container',
     username: owner,
@@ -41,9 +43,9 @@ const getContainerImageVersions = async (
   octo: Octokit, owner: string, imageName: string, packageType: 'container'|'docker' = 'container'
 ): Promise<ContainerImage[]> => {
   return octo.rest.packages.getAllPackageVersionsForPackageOwnedByUser({
-    package_type: packageType,
     package_name: imageName,
-    username: owner
+    package_type: packageType,
+    username: owner,
   }).then((response) => {
     return response.data.map((container) => {
       const output: ContainerImage = {
@@ -58,7 +60,9 @@ const getContainerImageVersions = async (
   });
 };
 
-const parseCommonRepoOptions = async (command: commander.Command): Promise<{repoInfo: RepoBranchInfo, octo: Octokit}> => {
+const parseCommonRepoOptions = async (
+  command: commander.Command
+): Promise<{repoInfo: RepoBranchInfo, octo: Octokit}> => {
   const options: DockerCommandOptions = command.optsWithGlobals();
 
   const repoInfo: RepoBranchInfo = await requireRepoInfo(options, command);
@@ -66,8 +70,8 @@ const parseCommonRepoOptions = async (command: commander.Command): Promise<{repo
   const octo: Octokit = getOctokit(token);
 
   return {
-    repoInfo,
     octo,
+    repoInfo,
   };
 };
 
@@ -84,7 +88,9 @@ export const dockerCommand = ():commander.Command => {
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
 
       if (!options.json) {
-        console.log(`Listing all container images for ${repoString(repoInfo)}${options.noUntagged && ' with at least 1 tag'}`);
+        console.log(
+          `Listing all container images for ${repoString(repoInfo)}${options.noUntagged && ' with at least 1 tag'}`
+        );
       }
 
       let images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
@@ -98,13 +104,13 @@ export const dockerCommand = ():commander.Command => {
           console.log(`No images found in ${repoString(repoInfo)}`);
           return;
         }
-          images.forEach((image) => {
+        images.forEach((image) => {
           console.log(`${image.container} - ${image.tags.join(', ')}`);
         });
       }
     });
 
-    const orphans = new commander.Command("orphans")
+  const orphans = new commander.Command("orphans")
     .description("List all images with no tags")
     .option("-j, --json", "Output as JSON", false)
     .passThroughOptions()
@@ -140,7 +146,7 @@ export const dockerCommand = ():commander.Command => {
     .option("-t, --token <token>", "GitHub token")
     .option("-j, --json", "Output as JSON", false)
     .addCommand(images, { isDefault: true })
-    .addCommand(orphans)
+    .addCommand(orphans);
   return docker;
 };
 
