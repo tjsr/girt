@@ -2,12 +2,12 @@ import * as commander from "commander";
 
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
 import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "../types.js";
+import { repoStringFromInfo, repoStringFromParts } from "../utils/repoUtils.js";
 
 import { fileURLToPath } from "node:url";
 import { getOctokit } from "../utils/octokit.js";
 import { getTokenRequired } from '../utils/getTokenRequired.js';
 import path from "node:path";
-import { repoString } from "../utils/repoUtils.js";
 import { requireRepoInfo } from "../utils/repoBranchCommands.js";
 
 export type DockerCommandOptions = {
@@ -20,6 +20,7 @@ export type DockerCommandOptions = {
 export type DockerImageComandOptions = {
   json?: boolean;
   noUntagged?: boolean;
+  orphans?: boolean;
 } & DockerCommandOptions;
 
 interface ContainerImage {
@@ -29,6 +30,8 @@ interface ContainerImage {
   tags: string[];
   updated: string;
 }
+
+type ContainerOrOphan = 'container'|'orphaned';
 
 // @ts-expect-error ts6133
 const _getContainerImagesForUser = async (
@@ -76,68 +79,116 @@ const parseCommonRepoOptions = async (
   };
 };
 
+const containerImageOrErrorOut = async (
+  octo: Octokit, command: commander.Command, owner: string, repo: string
+): Promise<ContainerImage[]|never> => {
+  try {
+    const images: ContainerImage[] = await getContainerImageVersions(octo, owner, repo);
+    return images;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (err: any) {
+    if (err.status === 404) {
+      command.error(`packages are not available for repository ${repoStringFromParts(owner, repo)}`);
+    } else if (err.status === 403) {
+      command.error(`Permission denied while reading package ${repoStringFromParts(owner, repo)}`);
+    } else {
+      command.error(`Unknown error while retrieving container image versions ` +
+        `for ${repoStringFromParts(owner, repo)}: ${err.message}`);
+    }
+  }
+};
+
+const imageIntentMessage = (
+  noUntaggedImages: boolean | undefined,
+  repoString: string,
+  imageType: 'container' | 'orphaned' = 'container'
+): string => {
+  let listMessage = `Listing all ${imageType} images for ${repoString}`;
+  if (noUntaggedImages) {
+    listMessage += ' with at least 1 tag';
+  }
+  return listMessage;
+};
+
+const outputResults = (
+  repoString: string,
+  images: ContainerImage[],
+  outputFunction: (_image: ContainerImage) => string,
+  criteria: ContainerOrOphan = 'container'
+): void => {
+  if (images.length === 0) {
+    console.log(`No ${criteria} found in ${repoString}`);
+    return;
+  }
+
+  images.forEach((image) => console.log(outputFunction(image)));
+  return;
+};
+
 export const dockerCommand = ():commander.Command => {
   const docker = new commander.Command("docker");
+
+  const imageDetailLine = (image: ContainerImage): string => {
+    const tagString = image.tags?.length >= 1 ? ` - (${image.tags.join(', ')})` : undefined;
+    return `${image.container}${tagString ?? ''}`;
+  };
+
+  const filterImages = (
+    images: ContainerImage[],
+    noUntagged: boolean | undefined,
+    orphans: boolean | undefined
+  ): ContainerImage[] => {
+    if (noUntagged) {
+      return images.filter((image) => image.tags?.length >= 1);
+    }
+    if (orphans) {
+      return images.filter((image) => !(image.tags?.length >= 1));
+    }
+    return images;
+  };
+
+  const consoleLogIf = (condition: boolean, ...args: string[]): void => {
+    if (condition) {
+      console.log(...args);
+    }
+  };
 
   const images = new commander.Command("images")
     .description("List all images in the given github package repository")
     .option("-j, --json", "Output as JSON", false)
     .option('--no-untagged', 'Do not list images with no tags')
+    .option('--orphans', 'List only images with no tags')
     .passThroughOptions()
     .action(async (_localOptions: DockerImageComandOptions, command: commander.Command) => {
       const options: DockerImageComandOptions = command.optsWithGlobals();
+      if (options.noUntagged && options.orphans) {
+        command.error('Cannot use both --no-untagged and --orphans options');
+      }
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
+      const repoString = repoStringFromInfo(repoInfo);
+      const imageType: ContainerOrOphan = options.orphans ? 'orphaned' : 'container';
 
-      if (!options.json) {
-        const undefStr = options.noUntagged ?? ' with at least 1 tag';
-        console.log(
-          `Listing all container images for ${repoString(repoInfo)}${undefStr}'}`
-        );
-      }
+      consoleLogIf(!options.json, imageIntentMessage(
+        options.noUntagged,
+        repoString,
+        imageType
+      ));
 
-      let images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
-      if (options.noUntagged) {
-        images = images.filter((image) => image.tags?.length >= 1);
-      }
+      let images: ContainerImage[] = await containerImageOrErrorOut(
+        octo, command, repoInfo.owner, repoInfo.repo
+      );
+
+      images = filterImages(images, options.noUntagged, options.orphans);
+
       if (options.json) {
         console.log(images);
       } else {
-        if (images.length === 0) {
-          console.log(`No images found in ${repoString(repoInfo)}`);
-          return;
-        }
-        images.forEach((image) => {
-          console.log(`${image.container} - ${image.tags.join(', ')}`);
-        });
+        outputResults(
+          repoString, images, imageDetailLine, imageType
+        );
       }
     });
 
-  const orphans = new commander.Command("orphans")
-    .description("List all images with no tags")
-    .option("-j, --json", "Output as JSON", false)
-    .passThroughOptions()
-    .action(async (_localOptions: DockerImageComandOptions, command: commander.Command) => {
-      const options: DockerImageComandOptions = command.optsWithGlobals();
-      const { repoInfo, octo } = await parseCommonRepoOptions(command);
-
-      if (!options.json) {
-        console.log(`Listing all orphaned images for ${repoString(repoInfo)}`);
-      }
-      const images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
-      const orphans: ContainerImage[] = images.filter((image) => !(image.tags?.length >= 1));
-      if (options.json) {
-        console.log(orphans);
-      } else {
-        if (orphans.length === 0) {
-          console.log(`No orphaned images found in ${repoString(repoInfo)}`);
-          return;
-        }
-        orphans.forEach((image) => {
-          console.log(image.container);
-        });
-      }
-    });
-    
   docker
     .description("Manage docker container images")
     .passThroughOptions()
@@ -147,8 +198,8 @@ export const dockerCommand = ():commander.Command => {
     .option("-p, --path <path>", "Location of repository if reading details from git repo on disk")
     .option("-t, --token <token>", "GitHub token")
     .option("-j, --json", "Output as JSON", false)
-    .addCommand(images, { isDefault: true })
-    .addCommand(orphans);
+    .option('--orphans', 'List only images with no tags')
+    .addCommand(images, { isDefault: true });
   return docker;
 };
 
