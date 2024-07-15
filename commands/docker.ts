@@ -95,7 +95,20 @@ export const dockerCommand = ():commander.Command => {
         );
       }
 
-      let images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
+      let images!: ContainerImage[];
+      try {
+        images = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } catch (err: any) {
+        if (err.status === 404) {
+          command.error(`packages are not available for repository ${repoString(repoInfo)}`);
+        } else if (err.status === 403) {
+          command.error(`Permission denied while reading package ${repoString(repoInfo)}`);
+        } else {
+          command.error(`Unknown error while retrieving container image versions ` +
+            `for ${repoString(repoInfo)}: ${err.message}`);
+        }
+      }
       if (options.noUntagged) {
         images = images.filter((image) => image.tags?.length >= 1);
       }
