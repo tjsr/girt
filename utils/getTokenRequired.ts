@@ -10,6 +10,7 @@ export const getTokenRequired = (command: commander.Command, options?: TokenComm
   const token = command.optsWithGlobals()['token'] || options?.token || process.env['GITHUB_TOKEN'];
   try {
     requireOption(token, 'token');
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   } catch (err: any) {
     command.showHelpAfterError();
     command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' +

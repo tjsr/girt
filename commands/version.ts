@@ -17,15 +17,17 @@ export const versionCommand = ():commander.Command => {
       let packageVersion: string;
       try {
         packageVersion = await getVersionFromPackageJson(options?.path || process.cwd());
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        command.error(`package.json not present in current directory ${process.cwd()}.`, err);
+        command.error(`package.json not present in current directory ${process.cwd()}: ${err.message}`);
       }
 
       let repoInfo: RepoBranchInfo;
       try {
         repoInfo = await getRepoBranchInfo(options?.owner, options?.repo, options?.branch, options?.path);
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } catch (err: any) {
-        command.error('Failed to get repository information', err);
+        command.error('Failed to get repository information: ' + err.message);
       }
       console.log(`Version: ${packageVersion!} ${repoInfo!.branch}`);
     });
