@@ -19,6 +19,7 @@ export type DockerCommandOptions = {
 
 export type DockerImageComandOptions = {
   json?: boolean;
+  noUntagged?: boolean;
 } & DockerCommandOptions;
 
 interface ContainerImage {
@@ -76,16 +77,20 @@ export const dockerCommand = ():commander.Command => {
   const images = new commander.Command("images")
     .description("List all images in the given github package repository")
     .option("-j, --json", "Output as JSON", false)
+    .option('--no-untagged', 'Do not list images with no tags')
     .passThroughOptions()
     .action(async (_localOptions: DockerImageComandOptions, command: commander.Command) => {
       const options: DockerImageComandOptions = command.optsWithGlobals();
       const { repoInfo, octo } = await parseCommonRepoOptions(command);
 
       if (!options.json) {
-        console.log(`Listing all container images for ${repoString(repoInfo)}`);
+        console.log(`Listing all container images for ${repoString(repoInfo)}${options.noUntagged && ' with at least 1 tag'}`);
       }
 
-      const images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
+      let images: ContainerImage[] = await getContainerImageVersions(octo, repoInfo.owner, repoInfo.repo);
+      if (options.noUntagged) {
+        images = images.filter((image) => image.tags?.length >= 1);
+      }
       if (options.json) {
         console.log(images);
       } else {
