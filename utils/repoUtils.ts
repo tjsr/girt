@@ -2,6 +2,8 @@ import { RepoBranchInfo, RepoInfo } from "../types.js";
 
 import gitRemoteOriginUrl from "git-remote-origin-url";
 
+type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
+
 export const getRepoInfo = async (path?: string): Promise<RepoInfo> => {
   const url = await gitRemoteOriginUrl({ cwd: path });
   return url?.startsWith('https://') ? getRepoInfoFromHttpsUrl(url) : getRepoInfoFromGitUrl(url);
@@ -30,6 +32,10 @@ const getRepoInfoFromGitUrl = (url: string): RepoInfo => {
   return { hostname, owner: repoUser, repo: repoName };
 };
 
+export const repoString = (repoInfo: Optional<RepoInfo, 'hostname'>): string => {
+  return `@${repoInfo.owner}/${repoInfo.repo}`;
+};
+
 export const repoBranchString = (repoBranchInfo: RepoBranchInfo): string => {
-  return `Protecting @${repoBranchInfo.owner}/${repoBranchInfo.repo}#${repoBranchInfo.branch}`;
+  return `Protecting ${repoString(repoBranchInfo)}#${repoBranchInfo.branch}`;
 };

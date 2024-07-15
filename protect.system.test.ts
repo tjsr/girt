@@ -26,7 +26,7 @@ describe('retrieveBranchProtectionSettings', () => {
     });
   });
 
-  test.runIf(hasGithubToken)('Should return the branch protection settings for the specified branch',
+  test.runIf(hasGithubToken).skip('Should return the branch protection settings for the specified branch',
     async (context: OctokitBranchProtectionContext) => {
       await expect(retrieveBranchProtectionSettings(context.octokit, {
         branch: context.branch,

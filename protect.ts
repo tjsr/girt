@@ -1,14 +1,22 @@
 import * as commander from "commander";
 
 import { GetResponseDataTypeFromEndpointMethod, RequestParameters } from "@octokit/types";
+import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "./types.js";
 import { parameterOrExistingOrDefault, safeInt } from './utils/utils.js';
-import { requireOption, validateRepoInfo } from './utils/options.js';
 
 import { Octokit } from "@octokit/rest";
-import { RepoBranchInfo } from "./types.js";
 import assert from 'assert';
+import { getOctokit } from './utils/octokit.js';
 import { getRepoBranchInfo } from './utils/branchParams.js';
+import { getTokenRequired } from './utils/getTokenRequired.js';
 import { repoBranchString } from './utils/repoUtils.js';
+import { validateRepoInfo } from './utils/options.js';
+
+export type ProtectCommandOptions = {
+  enforceAdmins?: boolean,
+  reviewers?: number,
+  query?: boolean
+} & RepoReferenceCommandOptions & TokenCommandOption;
 
 export const createReviewProtection = (
   branch: string,
@@ -90,20 +98,12 @@ export const protectCommand = ():commander.Command => {
       'Also enforce branch protection rules applying to admins (default: true for new configs)')
     .option("-t, --token <token>", "GitHub token")
     .option('-q, --query', 'Query the current branch protection settings')
-    .action(async (options, command: commander.Command) => {
+    .action(async (_protectOptions: ProtectCommandOptions, command: commander.Command) => {
+      const options: ProtectCommandOptions = command.optsWithGlobals();
+      const token: string = getTokenRequired(command, options);
       const repoBranchInfo: RepoBranchInfo = await getRepoBranchInfo(
         options.owner, options.repo, options.branch, options.path
       );
-      const token = options.token || process.env['GITHUB_TOKEN'];
-      
-      try {
-        requireOption(token, 'token');
-      } catch (err: any) {
-        command.showHelpAfterError();
-        command.error('Token must be provided via GITHUB_TOKEN environment var or command option. ' +
-          err.message, { code: 'GIRT.NO_TOKEN', exitCode: 2 });
-        return;
-      }
 
       try {
         validateRepoInfo(repoBranchInfo);
@@ -122,7 +122,8 @@ export const protectCommand = ():commander.Command => {
         return;
       }
 
-      const octo: Octokit = new Octokit({ auth: token });
+      const octo: Octokit = getOctokit(token);
+      
       const repoString = repoBranchString(repoBranchInfo);
       try {
         if (repoBranchInfo.repo === 'test') {
