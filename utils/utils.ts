@@ -44,7 +44,7 @@ export const getNewestPackageVersion = async (currentVersion?: string): Promise<
   };
 
   if (versionCheckCached(checkVersion)) {
-    const cachedVersion = getCachedLatestVersion();
+    const cachedVersion = getCachedLatestVersion() || checkVersion;
     console.log('Using cached version check', cachedVersion, checkVersion);
     result.latestVersion = cachedVersion;
     result.isNewVersionAvailable = semver.gt(cachedVersion, checkVersion);
