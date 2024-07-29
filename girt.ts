@@ -1,9 +1,10 @@
 #! node
 
-import { getCurrentVersion, getNewestPackageVersion } from "./utils/utils.js";
-
 import { GirtCommandOptions } from "./types.js";
+import { clearConfigstore } from "./utils/configstore.js";
 import { dockerCommand } from "./commands/docker.js";
+import { getCurrentVersion } from './utils/version.js';
+import { getNewestPackageVersion } from "./utils/utils.js";
 import { loginCommand } from "./login.js";
 import { program } from "commander";
 import { protectCommand } from "./protect.js";
@@ -23,13 +24,19 @@ program
   .option("-p, --path <path>", "Location of repository if reading details from git repo on disk")
   .option("-b, --branch <branch>", "Repository branch to modify")
   .option("-t, --token <token>", "GitHub token")
-  .action(async (_option: GirtCommandOptions, command) => {
+  .option('--clear-cache', 'Clear the cache of the latest version check')
+  .action(async (options: GirtCommandOptions, command) => {
+    if (options.clearCache) {
+      clearConfigstore();
+    }
     console.log(`${program.description()} ${version}`);
 
     try {
       const latestVersion = await getNewestPackageVersion(version);
       if (latestVersion.isNewVersionAvailable) {
-        console.log(`A new version ${latestVersion.latestVersion} is available (Currently ${version}).`);
+        const isCachedString = latestVersion.cachedCheck ? ' (cached check)' : '';
+        console.log(`A new version ${latestVersion.latestVersion} is available ` +
+          `(Currently ${version})${isCachedString}.`);
         console.log(`Run 'npm install -g girt' to update.`);
       }
     } catch (error) {

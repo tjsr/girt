@@ -1,7 +1,8 @@
 import * as semver from 'semver';
 
-import { findPackageJson, getVersionFromPackageJson } from "@tjsr/package-json-utils";
+import { getCachedLatestVersion, updateVersionChecked, versionCheckCached } from './configstore.js';
 
+import { getCurrentVersion } from './version.js';
 import latestVersion from 'latest-version';
 
 export const safeInt = (value: string|number|undefined): number|undefined => {
@@ -28,29 +29,33 @@ export const parameterOrExistingOrDefault = <DataType>(
 };
 
 export type NewPackageVersionInfo = {
-  isNewVersionAvailable: boolean;
+  cachedCheck: boolean,
   currentVersion: string;
+  isNewVersionAvailable: boolean;
   latestVersion: string;
-};
-
-let packageVersion: string|undefined;
-
-export const getCurrentVersion = async(reload: boolean = false): Promise<string> => {
-  if (reload || !packageVersion) {
-    const packageJsonPath = findPackageJson(import.meta.dirname);
-    packageVersion = await getVersionFromPackageJson(packageJsonPath);
-    return packageVersion;
-  }
-  return packageVersion;
 };
 
 export const getNewestPackageVersion = async (currentVersion?: string): Promise<NewPackageVersionInfo> => {
   const checkVersion = currentVersion || await getCurrentVersion();
-  const latestReleasedVersion = await latestVersion('girt');
 
-  return {
+  const result: Partial<NewPackageVersionInfo> = {
+    cachedCheck: true,
     currentVersion: checkVersion,
-    isNewVersionAvailable: semver.gt(latestReleasedVersion, checkVersion),
-    latestVersion: latestReleasedVersion,
   };
+
+  if (versionCheckCached(checkVersion)) {
+    const cachedVersion = getCachedLatestVersion();
+    console.log('Using cached version check', cachedVersion, checkVersion);
+    result.latestVersion = cachedVersion;
+    result.isNewVersionAvailable = semver.gt(cachedVersion, checkVersion);
+    return result as NewPackageVersionInfo;
+  }
+
+  const latestReleasedVersion = await latestVersion('girt');
+  
+  updateVersionChecked(checkVersion, latestReleasedVersion);
+  result.cachedCheck = false;
+  result.latestVersion = latestReleasedVersion;
+  result.isNewVersionAvailable = semver.gt(latestReleasedVersion, checkVersion);
+  return result as NewPackageVersionInfo;
 };
