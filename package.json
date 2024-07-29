@@ -1,6 +1,6 @@
 {
   "name": "girt",
-  "version": "0.0.4",
+  "version": "0.1.0",
   "description": "Github Repository Tool",
   "main": "./dist/esm/girt.js",
   "bin": {
