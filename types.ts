@@ -20,4 +20,5 @@ export type RepoReferenceCommandOptions = {
 }
 
 export type GirtCommandOptions = {
+  clearCache?: boolean;
 } & RepoReferenceCommandOptions & TokenCommandOption;
