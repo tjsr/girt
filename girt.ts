@@ -1,6 +1,6 @@
 #! node
 
-import { findPackageJson, getVersionFromPackageJson } from "@tjsr/package-json-utils";
+import { getCurrentVersion, getNewestPackageVersion } from "./utils/utils.js";
 
 import { GirtCommandOptions } from "./types.js";
 import { dockerCommand } from "./commands/docker.js";
@@ -10,8 +10,7 @@ import { protectCommand } from "./protect.js";
 import { tokenCommand } from "./token.js";
 import { versionCommand } from "./commands/version.js";
 
-const packageJsonPath = findPackageJson(import.meta.dirname);
-const version = await getVersionFromPackageJson(packageJsonPath);
+const version = await getCurrentVersion();
 
 program
   .version(version, '-v, --version', 'Output the current version')
@@ -25,7 +24,19 @@ program
   .option("-b, --branch <branch>", "Repository branch to modify")
   .option("-t, --token <token>", "GitHub token")
   .action(async (_option: GirtCommandOptions, command) => {
-    console.log(program.description());
+    console.log(`${program.description()} ${version}`);
+
+    try {
+      const latestVersion = await getNewestPackageVersion(version);
+      if (latestVersion.isNewVersionAvailable) {
+        console.log(`A new version ${latestVersion.latestVersion} is available (Currently ${version}).`);
+        console.log(`Run 'npm install -g girt' to update.`);
+      }
+    } catch (error) {
+      console.warn('Unable to check for latest version');
+      console.error(error);
+    }
+
     const commandList = program.commands.filter(
       (command) => command.name() !== 'girt')
       .map((command) => ` ${command.name()}: ${command.description()}`).join('\n');
