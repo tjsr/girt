@@ -60,6 +60,10 @@ npm link
 
 This enables you to simply call `girt` from anywhere that has your node_modules/bin on the path.
 
+## TODO
+
+- gh variable get <var[,...var]> - Ensure a variable is set for this repo.
+
 ## About
 
 Written by [Tim Rowe](mailto:tim@tjsr.id.au). Email me for questions or requests.
