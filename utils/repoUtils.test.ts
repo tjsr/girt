@@ -1,4 +1,4 @@
-import { repoStringFromInfo } from "./repoUtils.js";
+import { repoStringFromInfo } from './repoUtils.ts';
 
 describe('repoString', () => {
   test('Should put append undefined when branch is undefined', () => {

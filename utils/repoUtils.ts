@@ -1,6 +1,6 @@
-import { RepoBranchInfo, RepoInfo } from "../types.js";
+import { RepoBranchInfo, RepoInfo } from '../types.ts';
 
-import gitRemoteOriginUrl from "git-remote-origin-url";
+import gitRemoteOriginUrl from 'git-remote-origin-url';
 
 type Optional<T, K extends keyof T> = Omit<T, K> & Partial<Pick<T, K>>;
 

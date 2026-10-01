@@ -1,7 +1,7 @@
 import * as commander from "commander";
 
-import { TokenCommandOption } from "../types.js";
-import { requireOption } from "./options.js";
+import { TokenCommandOption } from '../types.ts';
+import { requireOption } from './options.ts';
 
 export const getTokenRequired = (command: commander.Command, options?: TokenCommandOption): string|never => {
   if (!options) {

@@ -1,6 +1,6 @@
 import * as commander from "commander";
 
-import { RepoBranchInfo } from "../types.js";
+import { RepoBranchInfo } from '../types.ts';
 import { getRepoBranchInfo } from '../utils/branchParams.ts';
 import { getVersionFromPackageJson } from "@tjsr/package-json-utils";
 

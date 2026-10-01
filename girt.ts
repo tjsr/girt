@@ -1,15 +1,15 @@
 #! node
 
-import { GirtCommandOptions } from "./types.js";
-import { clearConfigstore } from "./utils/configstore.js";
-import { dockerCommand } from "./commands/docker.js";
+import { GirtCommandOptions } from './types.ts';
+import { clearConfigstore } from './utils/configstore.ts';
+import { dockerCommand } from './commands/docker.ts';
 import { getCurrentVersion } from './utils/version.ts';
-import { getNewestPackageVersion } from "./utils/utils.js";
-import { loginCommand } from "./login.js";
-import { program } from "commander";
-import { protectCommand } from "./protect.js";
-import { tokenCommand } from "./token.js";
-import { versionCommand } from "./commands/version.js";
+import { getNewestPackageVersion } from './utils/utils.ts';
+import { loginCommand } from './login.ts';
+import { program } from 'commander';
+import { protectCommand } from './protect.ts';
+import { tokenCommand } from './token.ts';
+import { versionCommand } from './commands/version.ts';
 
 const version = await getCurrentVersion();
 

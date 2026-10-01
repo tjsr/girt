@@ -1,7 +1,7 @@
-import { createBranchProtectionSettingsPayload, createReviewProtection } from "./protect.js";
+import { createBranchProtectionSettingsPayload, createReviewProtection } from './protect.ts';
 
-import { BranchProtectionContext } from "./testTypes.js";
-import { basicContext } from "./testTypes.js";
+import { BranchProtectionContext } from './testTypes.ts';
+import { basicContext } from './testTypes.ts';
 
 describe<BranchProtectionContext>('createReviewProtection', () => {
   beforeEach(basicContext);
@@ -39,7 +39,12 @@ describe('createBranchProtectionSettingsPayload', () => {
 
     // Act
     const result = createBranchProtectionSettingsPayload(
-      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+      context.branch,
+      context.repoOwner,
+      context.repoName,
+      reviewers,
+      enforceAdmins
+    );
 
     // Assert
     expect(result.required_pull_request_reviews).not.toHaveProperty('required_approving_review_count');
@@ -52,12 +57,16 @@ describe('createBranchProtectionSettingsPayload', () => {
 
     // Act
     const result = createBranchProtectionSettingsPayload(
-      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+      context.branch,
+      context.repoOwner,
+      context.repoName,
+      reviewers,
+      enforceAdmins
+    );
 
     // Assert
     expect(result.required_pull_request_reviews.required_approving_review_count).toEqual(2);
   });
-
 
   test('Should set enforce admins false if value is already set false', (context: BranchProtectionContext) => {
     // Arrange
@@ -66,7 +75,12 @@ describe('createBranchProtectionSettingsPayload', () => {
 
     // Act
     const result = createBranchProtectionSettingsPayload(
-      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+      context.branch,
+      context.repoOwner,
+      context.repoName,
+      reviewers,
+      enforceAdmins
+    );
 
     // Assert
     expect(result).toHaveProperty('enforce_admins', false);
@@ -79,11 +93,14 @@ describe('createBranchProtectionSettingsPayload', () => {
 
     // Act
     const result = createBranchProtectionSettingsPayload(
-      context.branch, context.repoOwner, context.repoName, reviewers, enforceAdmins);
+      context.branch,
+      context.repoOwner,
+      context.repoName,
+      reviewers,
+      enforceAdmins
+    );
 
     // Assert
     expect(result).toHaveProperty('enforce_admins', true);
   });
-
 });
-

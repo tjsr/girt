@@ -1,4 +1,4 @@
-import { branchNameToVersion } from "./branchNameToVersion.js";
+import { branchNameToVersion } from './branchNameToVersion.ts';
 
 describe('branchNameToVersion', () => {
   test('Should replace disallowed characters except space with a dash', () => {

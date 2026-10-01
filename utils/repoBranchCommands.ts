@@ -1,7 +1,7 @@
 import * as commander from "commander";
 
-import { RepoBranchInfo } from "../types.js";
-import { getRepoBranchInfo } from "./branchParams.js";
+import { RepoBranchInfo } from '../types.ts';
+import { getRepoBranchInfo } from './branchParams.ts';
 
 export type RepoCommandOptions = {
   owner?: string|undefined;

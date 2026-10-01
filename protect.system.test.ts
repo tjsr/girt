@@ -1,6 +1,6 @@
-import { BranchProtectionContext } from "./testTypes.js";
-import { Octokit } from "@octokit/rest";
-import { retrieveBranchProtectionSettings } from "./protect.js";
+import { BranchProtectionContext } from './testTypes.ts';
+import { Octokit } from '@octokit/rest';
+import { retrieveBranchProtectionSettings } from './protect.ts';
 
 const hasGithubToken = process.env['GITHUB_TOKEN'] !== undefined;
 
@@ -26,12 +26,18 @@ describe('retrieveBranchProtectionSettings', () => {
     });
   });
 
-  test.runIf(hasGithubToken).skip('Should return the branch protection settings for the specified branch',
-    async (context: OctokitBranchProtectionContext) => {
-      await expect(retrieveBranchProtectionSettings(context.octokit, {
-        branch: context.branch,
-        owner: context.repoOwner,
-        repo: context.repoName,
-      })).resolves.toHaveProperty('data');
-    });
+  test
+    .runIf(hasGithubToken)
+    .skip(
+      'Should return the branch protection settings for the specified branch',
+      async (context: OctokitBranchProtectionContext) => {
+        await expect(
+          retrieveBranchProtectionSettings(context.octokit, {
+            branch: context.branch,
+            owner: context.repoOwner,
+            repo: context.repoName,
+          })
+        ).resolves.toHaveProperty('data');
+      }
+    );
 });
