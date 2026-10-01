@@ -1,4 +1,4 @@
-import { getNewestPackageVersion } from './utils.js';
+import { getNewestPackageVersion } from './utils.ts';
 
 describe('getNewestPackageVersion', () => {
   test('should return structure with isNewVersionAvailable=false if an old version', async () => {

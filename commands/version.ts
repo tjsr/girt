@@ -1,7 +1,7 @@
 import * as commander from "commander";
 
 import { RepoBranchInfo } from "../types.js";
-import { getRepoBranchInfo } from '../utils/branchParams.js';
+import { getRepoBranchInfo } from '../utils/branchParams.ts';
 import { getVersionFromPackageJson } from "@tjsr/package-json-utils";
 
 export const versionCommand = ():commander.Command => {

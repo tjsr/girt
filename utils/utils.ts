@@ -1,8 +1,8 @@
 import * as semver from 'semver';
 
-import { getCachedLatestVersion, updateVersionChecked, versionCheckCached } from './configstore.js';
+import { getCachedLatestVersion, updateVersionChecked, versionCheckCached } from './configstore.ts';
 
-import { getCurrentVersion } from './version.js';
+import { getCurrentVersion } from './version.ts';
 import latestVersion from 'latest-version';
 
 export const safeInt = (value: string|number|undefined): number|undefined => {

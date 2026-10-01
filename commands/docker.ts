@@ -6,7 +6,7 @@ import { repoStringFromInfo, repoStringFromParts } from "../utils/repoUtils.js";
 
 import { fileURLToPath } from "node:url";
 import { getOctokit } from "../utils/octokit.js";
-import { getTokenRequired } from '../utils/getTokenRequired.js';
+import { getTokenRequired } from '../utils/getTokenRequired.ts';
 import path from "node:path";
 import { requireRepoInfo } from "../utils/repoBranchCommands.js";
 

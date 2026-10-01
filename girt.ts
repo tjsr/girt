@@ -3,7 +3,7 @@
 import { GirtCommandOptions } from "./types.js";
 import { clearConfigstore } from "./utils/configstore.js";
 import { dockerCommand } from "./commands/docker.js";
-import { getCurrentVersion } from './utils/version.js';
+import { getCurrentVersion } from './utils/version.ts';
 import { getNewestPackageVersion } from "./utils/utils.js";
 import { loginCommand } from "./login.js";
 import { program } from "commander";
