@@ -1,6 +1,6 @@
 import * as commander from "commander";
 
-import { getAuthTokenAsString } from "./auth.js";
+import { getAuthTokenAsString } from './auth.ts';
 
 export const tokenCommand = ():commander.Command => {
   const token = new commander.Command("token");

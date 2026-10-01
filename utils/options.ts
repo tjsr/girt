@@ -1,4 +1,4 @@
-import { RepoBranchInfo } from "../types.js";
+import { RepoBranchInfo } from '../types.ts';
 
 export const requireOption = (option: string, optionName: string) => {
   if (!option) {

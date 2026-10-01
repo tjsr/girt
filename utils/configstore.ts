@@ -1,5 +1,5 @@
 import Configstore from 'configstore';
-import { getCurrentVersion } from "./version.js";
+import { getCurrentVersion } from './version.ts';
 
 const DEFAULT_VERSION_CHECK_CACHE_TIMEOUT = 6 * 60 * 60; // 6 hours
 

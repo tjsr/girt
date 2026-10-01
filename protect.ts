@@ -1,7 +1,7 @@
 import * as commander from "commander";
 
 import { GetResponseDataTypeFromEndpointMethod, RequestParameters } from "@octokit/types";
-import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "./types.js";
+import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from './types.ts';
 import { parameterOrExistingOrDefault, safeInt } from './utils/utils.ts';
 
 import { Octokit } from "@octokit/rest";

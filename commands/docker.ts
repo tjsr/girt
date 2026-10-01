@@ -1,14 +1,14 @@
 import * as commander from "commander";
 
 import { Octokit, RestEndpointMethodTypes } from "@octokit/rest";
-import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "../types.js";
-import { repoStringFromInfo, repoStringFromParts } from "../utils/repoUtils.js";
+import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from '../types.ts';
+import { repoStringFromInfo, repoStringFromParts } from '../utils/repoUtils.ts';
 
-import { fileURLToPath } from "node:url";
-import { getOctokit } from "../utils/octokit.js";
+import { fileURLToPath } from 'node:url';
+import { getOctokit } from '../utils/octokit.ts';
 import { getTokenRequired } from '../utils/getTokenRequired.ts';
-import path from "node:path";
-import { requireRepoInfo } from "../utils/repoBranchCommands.js";
+import path from 'node:path';
+import { requireRepoInfo } from '../utils/repoBranchCommands.ts';
 
 export type DockerCommandOptions = {
   owner?: string|undefined;

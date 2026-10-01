@@ -1,7 +1,7 @@
 import * as commander from "commander";
 
 import { execSync } from "child_process";
-import { getAuthTokenAsString } from "./auth.js";
+import { getAuthTokenAsString } from './auth.ts';
 
 export const loginCommand = ():commander.Command => {
   const login = new commander.Command("login");
