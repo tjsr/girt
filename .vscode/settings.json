@@ -1,4 +1,22 @@
-{ 
+{
+  "eslint.useFlatConfig": true,
+  "eslint.options": { "overrideConfigFile": "eslint.config.mjs" },
+  "eslint.validate": ["javascript", "javascriptreact", "typescript", "typescriptreact"],
+  "editor.formatOnSave": true,
+  "editor.codeActionsOnSave": { "source.fixAll.eslint": "explicit" },
+  "[typescript]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "[typescriptreact]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "editor.tabSize": 2,
+    "editor.insertSpaces": true
+  },
+  "prettier.requireConfig": true,
+  "prettier.configPath": ".prettierrc.json",
+  "typescript.preferences.importModuleSpecifierEnding": "ts",
   "eslint.lintTask.enable": true,
   "eslint.lintTask.options": "-c eslintrc.config.mjs",
   "jest.debugMode": false,

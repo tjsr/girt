@@ -2,15 +2,15 @@ import * as commander from "commander";
 
 import { GetResponseDataTypeFromEndpointMethod, RequestParameters } from "@octokit/types";
 import { RepoBranchInfo, RepoReferenceCommandOptions, TokenCommandOption } from "./types.js";
-import { parameterOrExistingOrDefault, safeInt } from './utils/utils.js';
+import { parameterOrExistingOrDefault, safeInt } from './utils/utils.ts';
 
 import { Octokit } from "@octokit/rest";
 import assert from 'assert';
-import { getOctokit } from './utils/octokit.js';
-import { getRepoBranchInfo } from './utils/branchParams.js';
-import { getTokenRequired } from './utils/getTokenRequired.js';
-import { repoBranchString } from './utils/repoUtils.js';
-import { validateRepoInfo } from './utils/options.js';
+import { getOctokit } from './utils/octokit.ts';
+import { getRepoBranchInfo } from './utils/branchParams.ts';
+import { getTokenRequired } from './utils/getTokenRequired.ts';
+import { repoBranchString } from './utils/repoUtils.ts';
+import { validateRepoInfo } from './utils/options.ts';
 
 export type ProtectCommandOptions = {
   enforceAdmins?: boolean,

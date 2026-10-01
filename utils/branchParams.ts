@@ -1,7 +1,7 @@
-import { RepoBranchInfo, RepoInfo } from '../types.js';
+import { RepoBranchInfo, RepoInfo } from '../types.ts';
 
 import { checkSync } from 'git-state';
-import { getRepoInfo } from './repoUtils.js';
+import { getRepoInfo } from './repoUtils.ts';
 
 export const getRepoBranchInfo = async (
   owner: string|undefined,
